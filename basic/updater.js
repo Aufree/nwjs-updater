@@ -10,16 +10,9 @@
   var gui = global.window.nwDispatcher.requireNwGui();
 
   var platform = process.platform;
+  var platform_bit = process.arch == 'ia32' ? '32' : '64';
 
-  platform = /^win/.test(platform)? 'win' : /^darwin/.test(platform)? 'mac' : 'linux' + (process.arch == 'ia32' ? '32' : '64');
-
-  if (platform == 'win') {
-    if (process.platform === 'win32') {
-        platform = 'win32';
-    } else {
-        platform = 'win64';
-    };
-  };
+  platform = /^win/.test(platform)? 'win' + platform_bit : /^darwin/.test(platform)? 'mac' : 'linux' + platform_bit;
 
   /**
    * Creates new instance of updater. Manifest could be a `package.json` of project.
