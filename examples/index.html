@@ -1,127 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Hello World</title>
+    <meta charset="UTF-8">
+    <title>Hello World</title>
+    <link href="http://cdn.bootcss.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+    <script src="http://cdn.bootcss.com/jquery/2.1.4/jquery.min.js"></script>
+    <script src="http://cdn.bootcss.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 </head>
+
 <body>
+
     <h1 id="header">Hello World</h1>
     <p id="local_text"></p>
-  <script>
+    <div class="row"></div>
+    <div class="modal fade .col-md-6 .col-md-offset-3" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                        &times;
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">
+                   Did you want to update your app?
+                </h4>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" onClick="startCheckNewVersion();">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-  var gui = require('nw.gui');
-  var copyPath, execPath;
+    <script> 
 
-  if(gui.App.argv.length){
-    copyPath = gui.App.argv[0];
-    execPath = gui.App.argv[1];
-  }
-  console.log("Copy path is " +  gui.App.argv[0]);
-  console.log("Exec path is " +  gui.App.argv[1]);
+    var gui = require('nw.gui');
+    var copyPath, execPath;
 
-  //download new version of app in tmp
-  //unpack
-  //run updater
-  //updater will copy itself to origin directory
-  //updater will run app
-  var pkg = require('./package.json');
-  var request = require('request');
-  var url = require('url');
-  var path = require('path');
-  var os = require('os');
-  var fs = require('fs');
-  var k = 0;
-  var d = false;
-  var updater = require('./updater.js');
-  var upd = new updater(pkg);
-  var newVersionCheckIntervalId = null;
-  var tryingForNewVersion = false;
-
-  require('fs').readFile(upd.getAppPath() + "/sample.txt", function(error, data) {
-    if (!error) {
-      document.getElementById('local_text').innerHTML = data;
-    } else {
-      console.log(error);
-    };
-  });
-  
-  //for test purposes
-  
-  // Normal run
-  if(!copyPath){
-    request.get(url.resolve(pkg.manifestUrl, '/version/'+ pkg.version));
-    newVersionCheckIntervalId = setInterval(function(){
-      if(!d && !tryingForNewVersion) {
-          tryingForNewVersion = true; //lock
-          upd.checkNewVersion(versionChecked);
-      }
-    }, 500);
-    
-  } 
-  // Run update process here
-  else {
-    upd.install(copyPath, newAppInstalled);
-    
-    document.getElementById('header').innerHTML = "Installing...";
-        
-    function newAppInstalled(err){
-      if(err){
-        console.log("Run app installed faluire" + err);
-        return;
-      }
-
-      upd.run(execPath, []);
-      gui.App.quit();
+    if (gui.App.argv.length) {
+        copyPath = gui.App.argv[0];
+        execPath = gui.App.argv[1];
     }
-  }
+    console.log("Copy path is " + gui.App.argv[0]);
+    console.log("Exec path is " + gui.App.argv[1]);
 
-  function versionChecked(err, newVersionExists, manifest){
-    tryingForNewVersion = false; //unlock
-    if(err){
-        console.log(err);
-        return Error(err);
+    //download new version of app in tmp
+    //unpack
+    //run updater
+    //updater will copy itself to origin directory
+    //updater will run app
+    var pkg = require('./package.json');
+    var request = require('request');
+    var url = require('url');
+    var path = require('path');
+    var os = require('os');
+    var fs = require('fs');
+    var k = 0;
+    var d = false;
+    var updater = require('./updater.js');
+    var upd = new updater(pkg);
+    var newVersionCheckIntervalId = null;
+    var tryingForNewVersion = false;
+
+    require('fs').readFile(upd.getAppPath() + "/sample.txt", function(error, data) {
+        if (!error) {
+            document.getElementById('local_text').innerHTML = data;
+        } else {
+            console.log(error);
+        };
+    });
+
+    //for test purposes
+
+    // Normal run
+    if (!copyPath) {
+        request.get(url.resolve(pkg.manifestUrl, '/version/' + pkg.version));
+        newVersionCheckIntervalId = setInterval(function() {
+            if (!d && !tryingForNewVersion) {
+                tryingForNewVersion = true; //lock
+                showConfirm();
+            }
+        }, 500);
+
     }
-    else if(d){
-        console.log('Already downloading');
-        return;
-    }
-    else if(!newVersionExists){
-        console.log('No new version exists');
-        return;
+    // Run update process here
+    else {
+        upd.install(copyPath, newAppInstalled);
+
+        document.getElementById('header').innerHTML = "Installing...";
+
+        function newAppInstalled(err) {
+            if (err) {
+                console.log("Run app installed faluire" + err);
+                return;
+            }
+
+            upd.run(execPath, []);
+            gui.App.quit();
+        }
     }
 
-    d = true;
-    clearInterval(newVersionCheckIntervalId);
-    var loaded = 0;
-    var newVersion = upd.download(function(error, filename){
-        newVersionDownloaded(error, filename, manifest);
-    }, manifest);
-    newVersion.on('data', function(chunk){
-      console.log("New version loading " + Math.floor(loaded / newVersion['content-length'] * 100) + '%');
-      loaded+=chunk.length;
-    })
-  }
-
-  console.log('New version start download');
-  function newVersionDownloaded(err, filename, manifest){
-    if(err){
-      console.log("Something wrong" + err)
-      return Error(err);
+    function showConfirm() {
+        $('#myModal').modal('show');
     }
-    console.log('New version downloaded');
-    upd.unpack(filename, newVersionUnpacked, manifest);
-  }
 
-  function newVersionUnpacked(err, newAppPath){
-    if(err){
-      console.log(err)
-      return Error(err);
+    function startCheckNewVersion () {
+            upd.checkNewVersion(versionChecked);
     }
-    console.log('New version unpack');
-    upd.runInstaller(newAppPath, [upd.getAppPath(), upd.getAppExec()]);
-    gui.App.quit();
-  }
-</script>
 
+    function versionChecked(err, newVersionExists, manifest) {
+        tryingForNewVersion = false; //unlock
+        if (err) {
+            console.log(err);
+            return Error(err);
+        } else if (d) {
+            console.log('Already downloading');
+            return;
+        } else if (!newVersionExists) {
+            console.log('No new version exists');
+            return;
+        }
+
+        d = true;
+        clearInterval(newVersionCheckIntervalId);
+        var loaded = 0;
+        var newVersion = upd.download(function(error, filename) {
+            newVersionDownloaded(error, filename, manifest);
+        }, manifest);
+        newVersion.on('data', function(chunk) {
+            console.log("New version loading " + Math.floor(loaded / newVersion['content-length'] * 100) + '%');
+            loaded += chunk.length;
+        })
+    }
+
+    console.log('New version start download');
+
+    function newVersionDownloaded(err, filename, manifest) {
+        if (err) {
+            console.log("Something wrong" + err)
+            return Error(err);
+        }
+        console.log('New version downloaded');
+        upd.unpack(filename, newVersionUnpacked, manifest);
+    }
+
+    function newVersionUnpacked(err, newAppPath) {
+        if (err) {
+            console.log(err)
+            return Error(err);
+        }
+        console.log('New version unpack');
+        upd.runInstaller(newAppPath, [upd.getAppPath(), upd.getAppExec()]);
+        gui.App.quit();
+    }
+    </script>
 </body>
+
 </html>
