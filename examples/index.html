@@ -8,7 +8,7 @@
     <h1 id="header">Hello World</h1>
     <p id="local_text"></p>
   <script>
-  
+
   var gui = require('nw.gui');
   var copyPath, execPath;
 
@@ -47,7 +47,7 @@
   
   //for test purposes
   
-  // 普通点击运行
+  // Normal run
   if(!copyPath){
     request.get(url.resolve(pkg.manifestUrl, '/version/'+ pkg.version));
     newVersionCheckIntervalId = setInterval(function(){
@@ -58,7 +58,7 @@
     }, 500);
     
   } 
-  // 有更新,子线程中运行
+  // Run update process here
   else {
     upd.install(copyPath, newAppInstalled);
     
