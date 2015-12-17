@@ -13,7 +13,7 @@ Covered by tests and works for [linux](http://screencast.com/t/Je2ptbHhP), [wind
 
 ## Examples
 
-- [Basic](Basic/updater.js)
+- [Basic](basic/updater.js)
 
 
 ## API
