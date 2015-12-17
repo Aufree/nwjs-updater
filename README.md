@@ -1,3 +1,5 @@
+Thanks for [node-webkit-updater](https://github.com/edjafarov/node-webkit-updater)
+
 It gives you low-level API to:
 
 1. Check the manifest for version (from your running "old" app).
