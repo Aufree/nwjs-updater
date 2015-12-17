@@ -1,0 +1,29 @@
+{
+  "name": "hello",
+  "version": "0.0.1",
+  "description": "Hello World Demo",
+  "author": "Paul King <aufree@est-group.org>",
+  "license": "MIT",
+  "manifestUrl": "http://192.168.1.13/package.json",
+  "packages": {
+      "mac": {
+         "url": "https://github.com/Aufree/nwjs-updater-demo/raw/master/mac/hello.zip"
+      },
+      "win32": {
+           "url": "http://192.168.1.13/hello.zip"
+        },
+      "win64": {
+           "url": "https://github.com/Aufree/nwjs-updater-demo/raw/master/windows/win64/hello.zip"
+        }
+  },
+  "window": {
+    "toolbar": true
+  },
+  "main": "index.html",
+  "dependencies": {
+    "ncp": "^0.5.1",
+    "request": "^2.36.0",
+    "del": "~0.1.2",
+    "semver": "^3.0.1"
+  }
+}
