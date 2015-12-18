@@ -66,38 +66,29 @@
     var upd = new updater(pkg);
     var newVersionCheckIntervalId = null;
     var tryingForNewVersion = false;
-    var tempPath = "";
     var sampleFilePath = upd.getAppPath() + "/sample.txt";
     var header = document.getElementById('header');
     var localText = document.getElementById('local_text');
 
-    fs.readFile(sampleFilePath, function(error, data) {
-        if (!error) {
-            tempPath = data;
-            localText.innerHTML = tempPath;
-            pathContent = localText.textContent;
-            // Auto start update
-
-            if (pathContent.length > 0) {
-                fs.stat(pathContent, function(err, stat) {
-                    if(err == null) {
-                        header.innerHTML = "Start update new version of app for you";
-                        recordTextToSampleFile("");
-                        upd.runInstaller(pathContent, [upd.getAppPath(), upd.getAppExec()]);
-                        gui.App.quit();
-                    } else {
-                        normalRun();
-                        console.log("Can't find temp file, Some other error: ", err.code);
-                    }
-                });
+    if (localStorage.tempFilePath) {
+        localText.innerHTML = localStorage.tempFilePath;
+        pathContent = localText.textContent;
+        
+        // Auto start update
+        fs.stat(pathContent, function(err, stat) {
+            if(err == null) {
+                header.innerHTML = "Start update new version of app for you";
+                localStorage.tempFilePath = "";
+                upd.runInstaller(pathContent, [upd.getAppPath(), upd.getAppExec()]);
+                gui.App.quit();
             } else {
                 normalRun();
-            };
-
-        } else {
-            console.log(error);
-        };
-    });
+                console.log("Can't find temp file, Some other error: ", err.code);
+            }
+        });
+    } else {
+        normalRun();
+    };
 
     function normalRun() {
         // Normal run
@@ -187,17 +178,11 @@
 
         upd.runInstaller(newAppPath, [upd.getAppPath(), upd.getAppExec()]);
         header.innerHTML = "Download package successfully!";
-        recordTextToSampleFile(newAppPath);
+        localStorage.tempFilePath = newAppPath;
 
         // gui.App.quit();
     }
 
-    function recordTextToSampleFile (fileText) {
-        fs.writeFile(sampleFilePath, fileText, function (err) {
-          if (err) throw err;
-          console.log("Text is " + fileText);
-        });
-    }
     </script>
 </body>
 
