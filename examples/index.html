@@ -68,17 +68,21 @@
     var tryingForNewVersion = false;
     var tempPath = "";
     var sampleFilePath = upd.getAppPath() + "/sample.txt";
+    var header = document.getElementById('header');
+    var localText = document.getElementById('local_text');
 
     fs.readFile(sampleFilePath, function(error, data) {
         if (!error) {
             tempPath = data;
-            document.getElementById('local_text').innerHTML = tempPath;
-            pathContent = document.getElementById('local_text').textContent;
+            localText.innerHTML = tempPath;
+            pathContent = localText.textContent;
             // Auto start update
 
             if (pathContent.length > 0) {
                 fs.stat(pathContent, function(err, stat) {
                     if(err == null) {
+                        header.innerHTML = "Start update new version of app for you";
+                        recordTextToSampleFile("");
                         upd.runInstaller(pathContent, [upd.getAppPath(), upd.getAppExec()]);
                         gui.App.quit();
                     } else {
@@ -100,7 +104,7 @@
         if (!copyPath) {
             request.get(url.resolve(pkg.manifestUrl, '/version/' + pkg.version));
             newVersionCheckIntervalId = setInterval(function() {
-                if (!d && !tryingForNewVersion) {
+                if (!isDownding && !tryingForNewVersion) {
                     tryingForNewVersion = true; //lock
                     startCheckNewVersion();
                     // showConfirm();
@@ -117,7 +121,7 @@
     function startInstall() {
         upd.install(copyPath, newAppInstalled);
 
-        document.getElementById('header').innerHTML = "Installing...";
+        header.innerHTML = "Installing...";
 
         function newAppInstalled(err) {
             if (err) {
@@ -125,7 +129,6 @@
                 return;
             }
 
-            recordTextToSampleFile("");
             upd.run(execPath, []);
             gui.App.quit();
         }
@@ -183,7 +186,7 @@
         console.log('New version unpack');
 
         upd.runInstaller(newAppPath, [upd.getAppPath(), upd.getAppExec()]);
-        document.getElementById('header').innerHTML = "Download package successfully!";
+        header.innerHTML = "Download package successfully!";
         recordTextToSampleFile(newAppPath);
 
         // gui.App.quit();
