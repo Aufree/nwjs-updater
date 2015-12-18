@@ -49,47 +49,72 @@
     console.log("Copy path is " + gui.App.argv[0]);
     console.log("Exec path is " + gui.App.argv[1]);
 
-    //download new version of app in tmp
-    //unpack
-    //run updater
-    //updater will copy itself to origin directory
-    //updater will run app
+    // download new version of app in tmp
+    // unpack
+    // run updater
+    // updater will copy itself to origin directory
+    // updater will run app
+
     var pkg = require('./package.json');
     var request = require('request');
     var url = require('url');
     var path = require('path');
     var os = require('os');
     var fs = require('fs');
-    var k = 0;
-    var d = false;
+    var isDownding = false;
     var updater = require('./updater.js');
     var upd = new updater(pkg);
     var newVersionCheckIntervalId = null;
     var tryingForNewVersion = false;
+    var tempPath = "";
+    var sampleFilePath = upd.getAppPath() + "/sample.txt";
 
-    require('fs').readFile(upd.getAppPath() + "/sample.txt", function(error, data) {
+    fs.readFile(sampleFilePath, function(error, data) {
         if (!error) {
-            document.getElementById('local_text').innerHTML = data;
+            tempPath = data;
+            document.getElementById('local_text').innerHTML = tempPath;
+            pathContent = document.getElementById('local_text').textContent;
+            // Auto start update
+
+            if (pathContent.length > 0) {
+                fs.stat(pathContent, function(err, stat) {
+                    if(err == null) {
+                        upd.runInstaller(pathContent, [upd.getAppPath(), upd.getAppExec()]);
+                        gui.App.quit();
+                    } else {
+                        normalRun();
+                        console.log("Can't find temp file, Some other error: ", err.code);
+                    }
+                });
+            } else {
+                normalRun();
+            };
+
         } else {
             console.log(error);
         };
     });
 
-    //for test purposes
+    function normalRun() {
+        // Normal run
+        if (!copyPath) {
+            request.get(url.resolve(pkg.manifestUrl, '/version/' + pkg.version));
+            newVersionCheckIntervalId = setInterval(function() {
+                if (!d && !tryingForNewVersion) {
+                    tryingForNewVersion = true; //lock
+                    startCheckNewVersion();
+                    // showConfirm();
+                }
+            }, 500);
 
-    // Normal run
-    if (!copyPath) {
-        request.get(url.resolve(pkg.manifestUrl, '/version/' + pkg.version));
-        newVersionCheckIntervalId = setInterval(function() {
-            if (!d && !tryingForNewVersion) {
-                tryingForNewVersion = true; //lock
-                showConfirm();
-            }
-        }, 500);
-
+        }
+        // Run update process here
+        else {
+            startInstall();
+        }
     }
-    // Run update process here
-    else {
+
+    function startInstall() {
         upd.install(copyPath, newAppInstalled);
 
         document.getElementById('header').innerHTML = "Installing...";
@@ -100,6 +125,7 @@
                 return;
             }
 
+            recordTextToSampleFile("");
             upd.run(execPath, []);
             gui.App.quit();
         }
@@ -118,7 +144,7 @@
         if (err) {
             console.log(err);
             return Error(err);
-        } else if (d) {
+        } else if (isDownding) {
             console.log('Already downloading');
             return;
         } else if (!newVersionExists) {
@@ -126,7 +152,7 @@
             return;
         }
 
-        d = true;
+        isDownding = true;
         clearInterval(newVersionCheckIntervalId);
         var loaded = 0;
         var newVersion = upd.download(function(error, filename) {
@@ -155,8 +181,19 @@
             return Error(err);
         }
         console.log('New version unpack');
+
         upd.runInstaller(newAppPath, [upd.getAppPath(), upd.getAppExec()]);
-        gui.App.quit();
+        document.getElementById('header').innerHTML = "Download package successfully!";
+        recordTextToSampleFile(newAppPath);
+
+        // gui.App.quit();
+    }
+
+    function recordTextToSampleFile (fileText) {
+        fs.writeFile(sampleFilePath, fileText, function (err) {
+          if (err) throw err;
+          console.log("Text is " + fileText);
+        });
     }
     </script>
 </body>

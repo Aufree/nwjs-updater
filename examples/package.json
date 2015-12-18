@@ -13,7 +13,7 @@
            "url": "http://192.168.1.13/hello.zip"
         },
       "win64": {
-           "url": "https://github.com/Aufree/nwjs-updater-demo/raw/master/windows/win64/hello.zip"
+           "url": "http://192.168.1.13/hello.zip"
         }
   },
   "window": {
